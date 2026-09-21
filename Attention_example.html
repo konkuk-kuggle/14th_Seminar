@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>어텐션 체험실</title>
+<meta name="description" content="문장을 입력하고 직접 점수를 매겨 어텐션 계산을 손으로 돌려보는 페이지">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --canvas:#ffffff;
+  --panel:#ffffff;
+  --shade:#f1f0ea;
+  --field:#ffffff;
+  --ink:#000000;
+  --mute:#5a5a5a;
+  --border:#000000;
+  --hair:#000000;
+  --red:#e91d2a;
+  --yellow:#fcc20f;
+  --on-tint:#101010;
+  --on-dark:#ffffff;
+  --bar-track:#e4e2d9;
+
+  --t1:#9ab6c8;
+  --t2:#d77a7a;
+  --t3:#c0d4a7;
+  --t4:#e6915d;
+  --t5:#8c9ae0;
+  --t6:#b3bd95;
+  --t7:#a5b8c0;
+  --t8:#8e8a25;
+
+  --fs-body:1rem;
+  --gut:20px;
+  --sans:"Pretendard Variable","Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --canvas:#121210;
+    --panel:#1c1c18;
+    --shade:#22221c;
+    --field:#26261f;
+    --ink:#f2f0e7;
+    --mute:#a5a396;
+    --border:#4d4d44;
+    --hair:#4d4d44;
+    --bar-track:#33332b;
+  }
+}
+:root[data-theme="dark"]{
+  --canvas:#121210;
+  --panel:#1c1c18;
+  --shade:#22221c;
+  --field:#26261f;
+  --ink:#f2f0e7;
+  --mute:#a5a396;
+  --border:#4d4d44;
+  --hair:#4d4d44;
+  --bar-track:#33332b;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--canvas);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:var(--fs-body);
+  line-height:1.55;
+  -webkit-text-size-adjust:100%;
+}
+h1,h2,h3{margin:0;text-wrap:balance;letter-spacing:-0.02em}
+p{margin:0}
+button{font:inherit;color:inherit}
+
+/* ---------- masthead ---------- */
+.masthead{
+  background:#000;
+  color:#fff;
+  padding:calc(env(safe-area-inset-top,0px) + 18px) var(--gut) 18px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  gap:12px 18px;
+}
+.masthead-inner{
+  width:100%;
+  max-width:1020px;
+  margin:0 auto;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px 18px;
+}
+.eyebrow{
+  font-size:.75rem;
+  font-weight:800;
+  letter-spacing:.14em;
+  color:var(--yellow);
+  margin-bottom:4px;
+}
+.masthead h1{
+  font-size:clamp(1.55rem,5.2vw,2.2rem);
+  font-weight:900;
+  line-height:1.05;
+  color:#fff;
+}
+.masthead .sub{
+  font-size:.9rem;
+  font-weight:500;
+  color:#cfcdc4;
+  margin-top:6px;
+  max-width:46ch;
+}
+.sticker{
+  background:var(--yellow);
+  color:#101010;
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  padding:6px 12px;
+  border:1px solid #000;
+  box-shadow:2px 2px 0 #000;
+  white-space:nowrap;
+}
+
+/* ---------- shell ---------- */
+.shell{
+  max-width:1020px;
+  margin:0 auto;
+  padding:0 var(--gut);
+  padding-bottom:calc(env(safe-area-inset-bottom,0px) + 48px);
+}
+
+/* ---------- tabs ---------- */
+.tabs{
+  display:flex;
+  gap:0;
+  margin-top:24px;
+  border-bottom:2px solid var(--hair);
+  flex-wrap:wrap;
+}
+.tab{
+  appearance:none;
+  background:var(--shade);
+  border:1px solid var(--hair);
+  border-bottom:none;
+  padding:11px 16px;
+  font-weight:700;
+  font-size:.92rem;
+  cursor:pointer;
+  color:var(--mute);
+  margin-right:-1px;
+}
+.tab[aria-selected="true"]{
+  background:var(--ink);
+  color:var(--canvas);
+  border-color:var(--ink);
+}
+.tab:focus-visible{outline:3px solid var(--red);outline-offset:-3px}
+@media (max-width:430px){
+  .tab{padding:10px 11px;font-size:.84rem}
+}
+
+/* ---------- cards ---------- */
+.card{
+  border:1px solid var(--hair);
+  background:var(--panel);
+  margin-top:22px;
+}
+.card-bar{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  padding:10px 16px;
+  border-bottom:2px solid var(--hair);
+  background:var(--panel);
+}
+.step-no{
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.1em;
+  color:var(--canvas);
+  background:var(--ink);
+  padding:3px 8px;
+}
+.card-bar h2{font-size:1rem;font-weight:700;letter-spacing:.01em}
+.card-body{padding:16px}
+.note{font-size:.82rem;color:var(--mute);line-height:1.5}
+.note + .note{margin-top:6px}
+
+/* ---------- input ---------- */
+.examples{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.ex{
+  appearance:none;
+  background:var(--shade);
+  border:1px solid var(--hair);
+  padding:7px 11px;
+  font-size:.82rem;
+  font-weight:600;
+  cursor:pointer;
+  text-align:left;
+}
+.ex:hover{background:var(--yellow);color:#101010}
+.ex:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.input-row{display:flex;gap:8px;flex-wrap:wrap}
+#sentence{
+  flex:1 1 180px;
+  min-width:0;
+  font:inherit;
+  font-size:1rem;
+  padding:11px 12px;
+  border:1px solid var(--hair);
+  background:var(--field);
+  color:var(--ink);
+  border-radius:0;
+}
+#sentence:focus{outline:3px solid var(--red);outline-offset:-1px}
+.go{
+  appearance:none;
+  background:var(--ink);
+  color:var(--canvas);
+  border:1px solid var(--hair);
+  padding:11px 20px;
+  font-weight:800;
+  cursor:pointer;
+  flex:0 0 auto;
+}
+.go:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+
+/* ---------- token chips ---------- */
+.tokens{display:flex;flex-wrap:wrap;gap:8px}
+.tok{
+  appearance:none;
+  border:1px solid var(--hair);
+  background:var(--shade);
+  color:var(--ink);
+  padding:8px 12px;
+  font-size:.95rem;
+  font-weight:600;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.tok:hover{background:var(--yellow);color:#101010}
+.tok:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.tok[aria-pressed="true"]{
+  background:var(--ink);
+  color:var(--canvas);
+  border-color:var(--ink);
+}
+.swatch{width:12px;height:12px;border:1px solid var(--hair);flex:0 0 auto}
+.tok[aria-pressed="true"] .swatch{border-color:var(--canvas)}
+
+/* ---------- work area ---------- */
+.work{display:grid;gap:22px;grid-template-columns:1fr}
+@media (min-width:900px){
+  .work{grid-template-columns:1fr 1fr;align-items:start}
+  .work > .card{margin-top:0}
+}
+.work-wrap{margin-top:22px}
+
+/* ---------- sliders ---------- */
+.slider-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:2px 10px;
+  padding:11px 0;
+  border-bottom:1px solid var(--hair);
+}
+.slider-row:last-child{border-bottom:none}
+.slider-row .word{font-weight:700;font-size:.95rem;display:flex;align-items:center;gap:8px;min-width:0}
+.slider-row .word span.name{overflow-wrap:anywhere}
+.self-tag{
+  font-size:.66rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  background:var(--ink);
+  color:var(--canvas);
+  padding:2px 6px;
+  flex:0 0 auto;
+}
+.pct{
+  font-weight:800;
+  font-variant-numeric:tabular-nums;
+  font-size:.95rem;
+  text-align:right;
+  min-width:4.2ch;
+}
+.slider-row input[type=range]{
+  grid-column:1 / -1;
+  width:100%;
+  margin:4px 0 0;
+  accent-color:var(--red);
+  height:24px;
+}
+.slider-row input[type=range]:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.minibar{
+  grid-column:1 / -1;
+  height:10px;
+  background:var(--bar-track);
+  border:1px solid var(--hair);
+}
+.minibar i{display:block;height:100%}
+
+/* ---------- result ---------- */
+.verdict{
+  background:var(--ink);
+  color:var(--canvas);
+  padding:14px 16px;
+  font-weight:600;
+  font-size:.95rem;
+  line-height:1.5;
+}
+.mix{
+  display:flex;
+  gap:14px;
+  align-items:center;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+.mix-chip{
+  width:84px;
+  height:84px;
+  border:2px solid var(--hair);
+  box-shadow:3px 3px 0 var(--hair);
+  flex:0 0 auto;
+}
+.mix-label{flex:1 1 180px;min-width:0}
+.mix-label .big{font-size:1.05rem;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+.stack{
+  display:flex;
+  height:34px;
+  border:1px solid var(--hair);
+  margin-top:14px;
+  overflow:hidden;
+}
+.stack i{display:block;height:100%}
+.legend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 14px;
+  margin-top:10px;
+  font-size:.8rem;
+  color:var(--mute);
+}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+/* ---------- details ---------- */
+details{border-top:1px solid var(--hair);margin-top:16px;padding-top:12px}
+summary{
+  cursor:pointer;
+  font-weight:700;
+  font-size:.88rem;
+  list-style:none;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"▸";color:var(--red);font-size:.9em}
+details[open] summary::before{content:"▾"}
+summary:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.table-wrap{overflow-x:auto;margin-top:12px}
+table{border-collapse:collapse;width:100%;font-size:.84rem;min-width:360px}
+th,td{border-bottom:1px solid var(--hair);padding:7px 9px;text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left;font-weight:700}
+thead th{
+  background:var(--t6);
+  color:var(--on-tint);
+  border-bottom:2px solid var(--hair);
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.06em;
+}
+.temp-row{display:flex;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+.temp-row label{font-weight:700;font-size:.85rem;flex:0 0 auto}
+.temp-row input[type=range]{flex:1 1 140px;accent-color:var(--red);min-width:0}
+.temp-val{font-variant-numeric:tabular-nums;font-weight:800;min-width:3.5ch}
+
+/* ---------- real-model tab ---------- */
+.pair{display:grid;gap:18px;grid-template-columns:1fr}
+@media (min-width:760px){.pair{grid-template-columns:1fr 1fr}}
+.sent{
+  font-size:1rem;
+  line-height:1.9;
+  padding:12px;
+  background:var(--shade);
+  border:1px solid var(--hair);
+  overflow-wrap:anywhere;
+}
+.sent mark{background:var(--yellow);color:#101010;font-weight:800;padding:0 3px}
+.sent em{font-style:normal;font-weight:800;border-bottom:3px solid var(--red)}
+.attn-list{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.attn{display:grid;grid-template-columns:5.5rem 1fr 3.2rem;gap:8px;align-items:center;font-size:.85rem}
+.attn .w{font-weight:700;overflow-wrap:anywhere}
+.attn .track{height:14px;background:var(--bar-track);border:1px solid var(--hair)}
+.attn .track i{display:block;height:100%;background:var(--t1)}
+.attn .track i.hot{background:var(--red)}
+.attn .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--mute)}
+
+/* ---- concentration / entropy readout ---- */
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px}
+.stat{
+  flex:1 1 140px;min-width:0;
+  border:1px solid var(--hair);padding:10px 12px;background:var(--panel);
+}
+.stat .k{font-size:.72rem;font-weight:800;letter-spacing:.06em;color:var(--mute)}
+.stat .v{font-size:1.35rem;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:2px}
+.stat .d{font-size:.75rem;color:var(--mute);margin-top:2px}
+.gauge{height:8px;border:1px solid var(--hair);margin-top:8px;background:var(--canvas)}
+.gauge i{display:block;height:100%;background:var(--ink)}
+
+/* ---- python code panel ---- */
+.code-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.copy-btn{
+  border:1px solid var(--ink);background:var(--yellow);color:#101010;
+  font:inherit;font-size:.78rem;font-weight:800;padding:6px 12px;cursor:pointer;
+}
+.copy-btn:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+pre.code{
+  margin-top:10px;border:1px solid var(--hair);background:var(--panel);
+  padding:12px;overflow-x:auto;font-size:.78rem;line-height:1.65;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  white-space:pre;color:var(--ink);
+}
+
+/* ---- self-attention matrix ---- */
+.mtx-wrap{overflow-x:auto;margin-top:4px}
+table.mtx{border-collapse:collapse;font-size:.74rem}
+table.mtx th,table.mtx td{border:1px solid var(--hair);padding:4px 6px;text-align:center;white-space:nowrap}
+table.mtx th{font-weight:800;background:var(--panel)}
+table.mtx th.rh{text-align:left;position:sticky;left:0;background:var(--panel)}
+table.mtx td{font-variant-numeric:tabular-nums;position:relative;color:#101010}
+table.mtx td.empty{color:var(--mute);background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(128,128,128,.14) 4px,rgba(128,128,128,.14) 8px)}
+table.mtx tr.done th.rh{border-left:4px solid var(--red)}
+
+.callout{
+  border:1px solid var(--hair);
+  border-left:8px solid var(--red);
+  padding:14px 16px;
+  margin-top:22px;
+  background:var(--panel);
+}
+.callout h3{font-size:.95rem;font-weight:800;margin-bottom:6px}
+a{color:var(--ink);text-underline-offset:3px;text-decoration-thickness:2px}
+a:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+
+footer{
+  margin-top:40px;
+  border-top:2px solid var(--hair);
+  padding-top:14px;
+  font-size:.78rem;
+  color:var(--mute);
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 18px;
+  justify-content:space-between;
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div>
+      <div class="eyebrow">KUGGLE LLM 스터디 · 3강</div>
+      <h1>어텐션 체험실</h1>
+      <p class="sub">문장을 넣고, 단어 하나를 골라, 나머지 단어에 직접 점수를 매겨 보세요. 여러분이 어텐션이 됩니다.</p>
+    </div>
+    <div class="sticker">직접 해보세요</div>
+  </div>
+</header>
+
+<div class="shell">
+
+  <div class="tabs" role="tablist" aria-label="보기 전환">
+    <button class="tab" id="tab-play" role="tab" aria-selected="true" aria-controls="panel-play" type="button">내가 어텐션 되어보기</button>
+    <button class="tab" id="tab-real" role="tab" aria-selected="false" aria-controls="panel-real" type="button">진짜 모델은?</button>
+  </div>
+
+  <!-- ============ PANEL 1 ============ -->
+  <section id="panel-play" role="tabpanel" aria-labelledby="tab-play">
+
+    <div class="card">
+      <div class="card-bar"><span class="step-no">1</span><h2>문장을 정합니다</h2></div>
+      <div class="card-body">
+        <div class="examples" id="examples"></div>
+        <div class="input-row">
+          <input id="sentence" type="text" autocomplete="off" aria-label="분석할 문장" placeholder="문장을 입력하세요">
+          <button class="go" id="apply" type="button">넣기</button>
+        </div>
+        <p class="note" id="tok-note" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-bar"><span class="step-no">2</span><h2>뜻을 정할 단어를 고릅니다</h2></div>
+      <div class="card-body">
+        <div class="tokens" id="tokens"></div>
+        <p class="note" style="margin-top:10px">여기서는 띄어쓰기 단위로 잘랐습니다. 실제 모델은 이보다 잘게 쪼갠 <b>토큰</b>을 씁니다.</p>
+      </div>
+    </div>
+
+    <div class="work-wrap">
+      <div class="work">
+
+        <div class="card">
+          <div class="card-bar"><span class="step-no">3</span><h2>점수를 매깁니다</h2></div>
+          <div class="card-body">
+            <p class="note" id="score-prompt" style="margin-bottom:8px"></p>
+            <div id="sliders"></div>
+            <div class="temp-row">
+              <label for="temp">온도</label>
+              <input id="temp" type="range" min="0.3" max="3" step="0.1" value="1">
+              <span class="temp-val" id="temp-val">1.0</span>
+            </div>
+            <p class="note">온도를 낮추면 1등에 몰아주고, 높이면 골고루 퍼집니다. 같은 점수라도 결과가 달라져요.</p>
+
+            <details style="margin-top:12px">
+              <summary>이 온도가 논문 수식의 ÷√d 입니다</summary>
+              <p class="note" style="margin-top:8px">어텐션 점수는 두 벡터의 내적으로 만듭니다. 벡터 차원 d가 커지면 내적은 d에 비례해 분산이 커지고, 점수가 커질수록 소프트맥스는 한 단어에 확률을 거의 다 몰아줍니다. 그래서 √d로 나눠 점수의 크기를 되돌립니다 — 지금 온도 슬라이더와 정확히 같은 역할이에요.</p>
+              <div class="mtx-wrap">
+                <table class="mtx" style="margin-top:10px">
+                  <thead><tr><th scope="col">차원 d</th><th scope="col">÷√d 없이</th><th scope="col">÷√d 적용</th></tr></thead>
+                  <tbody id="scale-body"></tbody>
+                </table>
+              </div>
+              <p class="note" style="margin-top:8px">무작위 벡터로 실제 계산한 값입니다(1등 단어가 가져가는 확률, 200회 평균). 스케일을 안 하면 d가 커질수록 사실상 한 단어만 보게 됩니다.</p>
+            </details>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-bar"><span class="step-no">4</span><h2>결과</h2></div>
+          <div class="card-body">
+            <div class="verdict" id="verdict"></div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="k">집중도</div>
+                <div class="v" id="stat-conc">—</div>
+                <div class="d" id="stat-conc-d">한 곳에 쏠릴수록 100%</div>
+                <div class="gauge"><i id="stat-gauge" style="width:0%"></i></div>
+              </div>
+              <div class="stat">
+                <div class="k">엔트로피</div>
+                <div class="v" id="stat-ent">—</div>
+                <div class="d" id="stat-ent-d">비트 단위</div>
+              </div>
+              <div class="stat">
+                <div class="k">유효 참조 단어 수</div>
+                <div class="v" id="stat-eff">—</div>
+                <div class="d">실질적으로 몇 단어를 보는지</div>
+              </div>
+            </div>
+            <p class="note">어텐션 가중치는 단어 위의 <b>확률분포</b>입니다. 그래서 엔트로피로 &ldquo;이 단어가 문장을 골고루 보는지, 한 곳에만 꽂혔는지&rdquo;를 수치로 잴 수 있어요. 유효 참조 단어 수는 2<sup>엔트로피</sup>입니다.</p>
+
+            <div class="mix">
+              <div class="mix-chip" id="mix-chip"></div>
+              <div class="mix-label">
+                <div class="big" id="mix-title"></div>
+                <div class="note" style="margin-top:6px;font-variant-numeric:tabular-nums" id="mix-vec"></div>
+                <p class="note" style="margin-top:6px">단어마다 색을 하나씩 줬습니다. 색은 사실 <b>숫자 3개짜리 벡터</b>(R, G, B)예요. 위 값은 그 벡터들을 확률만큼 곱해서 더한 <b>가중합</b>입니다. 실제 모델은 3개가 아니라 수백 개짜리 벡터로 똑같이 합니다.</p>
+              </div>
+            </div>
+
+            <div class="stack" id="stack" aria-hidden="true"></div>
+            <div class="legend" id="legend"></div>
+
+            <details>
+              <summary>계산 들여다보기</summary>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th scope="col">단어</th><th scope="col">점수</th><th scope="col">점수÷온도</th><th scope="col">exp</th><th scope="col">확률</th></tr>
+                  </thead>
+                  <tbody id="calc-body"></tbody>
+                </table>
+              </div>
+              <p class="note" style="margin-top:10px">확률 = exp(점수÷온도) ÷ 모든 exp의 합. 이게 <b>소프트맥스</b>입니다. 합은 항상 100%가 됩니다.</p>
+            </details>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>방금 한 일</h3>
+      <p>단어마다 점수를 매기고 → 소프트맥스로 확률로 바꾸고 → 그 비율대로 섞었습니다. 이게 어텐션 한 번입니다.
+      다른 점은 딱 하나예요. <b>진짜 모델은 이 점수를 사람이 아니라 학습으로 스스로 매깁니다.</b></p>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <div class="card-bar"><span class="step-no">5</span><h2>모든 단어가 이걸 동시에 합니다</h2></div>
+      <div class="card-body">
+        <p class="note" style="margin-bottom:12px">지금까지 한 건 <b>한 단어의 한 줄</b>입니다. 위에서 다른 단어를 골라 점수를 매기면 그 줄도 아래 표에 쌓입니다. 줄이 단어 수만큼 다 차면 그게 <b>셀프 어텐션 행렬</b>이에요 — 모든 단어가 모든 단어를 보는 표입니다.</p>
+        <div class="mtx-wrap" id="matrix"></div>
+        <p class="note" id="mtx-note" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:22px">
+      <div class="card-bar"><span class="step-no">6</span><h2>지금 이 계산을 파이썬으로</h2></div>
+      <div class="card-body">
+        <div class="code-head">
+          <p class="note" style="margin:0;flex:1 1 200px">아래는 <b>지금 화면의 숫자 그대로</b> 돌아가는 코드입니다. 복사해서 주피터나 Colab에 붙여넣으면 같은 결과가 나옵니다.</p>
+          <button class="copy-btn" id="copy-code" type="button">코드 복사</button>
+        </div>
+        <pre class="code" id="code-out"></pre>
+        <p class="note" style="margin-top:10px">여기서 이어서 해볼 것 — 점수를 직접 적는 대신 <code>scores = X @ X.T</code>처럼 벡터 내적으로 만들어 보세요. 그게 Q·K입니다. 그리고 <code>/ np.sqrt(d)</code>를 넣고 빼면서 위 표의 현상을 직접 확인해 보세요.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============ PANEL 2 ============ -->
+  <section id="panel-real" role="tabpanel" aria-labelledby="tab-real" hidden>
+
+    <div class="card">
+      <div class="card-bar"><span class="step-no">비교</span><h2>단어 하나가 바뀌면 어텐션이 바뀐다</h2></div>
+      <div class="card-body">
+        <p class="note" style="margin-bottom:16px">두 문장은 마지막 단어만 다릅니다. 그런데 <b>bank</b>가 어디를 보는지가 통째로 달라집니다. 아래는 bank가 각 단어를 얼마나 참고하는지입니다.</p>
+        <div class="pair" id="pair"></div>
+        <p class="note" style="margin-top:16px">위 수치는 설명을 위해 구성한 예시 패턴입니다. 실제 값은 모델·층·헤드마다 다르고, 한 문장에도 여러 개의 어텐션 패턴이 동시에 존재합니다.</p>
+      </div>
+    </div>
+
+    <div class="callout">
+      <h3>진짜 모델로 확인해보고 싶다면</h3>
+      <p><a href="https://poloclub.github.io/transformer-explainer/" target="_blank" rel="noopener">Transformer Explainer</a>는 브라우저에서 실제 GPT-2를 돌립니다.
+      문장을 넣으면 어텐션 연결과 다음 단어 확률이 그대로 보이고, 온도 슬라이더도 이 페이지와 같은 역할을 합니다.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-bar"><span class="step-no">정리</span><h2>오늘의 한 줄</h2></div>
+      <div class="card-body">
+        <p style="font-size:1.05rem;font-weight:700;line-height:1.6">어텐션은 단어의 뜻을 문맥으로 다시 계산하는 방법이고,<br>트랜스포머는 그 계산을 병렬로 쌓아 올린 구조입니다.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <footer>
+    <span>KUGGLE LLM 스터디 3강 · 어텐션과 트랜스포머 발표 보조 자료</span>
+    <span>참고: Vaswani et al. (2017), Google Research 블로그</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TINTS = ["#9ab6c8","#d77a7a","#c0d4a7","#e6915d","#8c9ae0","#b3bd95","#a5b8c0","#8e8a25"];
+  var MAXTOK = 12;
+
+  var EXAMPLES = [
+    { label:"차 = 마시는 차", text:"나는 어제 차를 마시며 책을 읽었다", focus:2, preset:{3:3} },
+    { label:"차 = 타는 차",   text:"동생이 차를 타고 학교에 갔다",        focus:1 },
+    { label:"배 = 타는 배",   text:"친구가 배를 타고 섬에 들어갔다",      focus:1 },
+    { label:"영어 예문",       text:"I arrived at the bank after crossing the river", focus:4 }
+  ];
+
+  // saved[i] = the score row the user set while focused on word i.
+  // Rows persist when the focus changes, so the matrix fills up as they work.
+  var state = { tokens:[], focus:0, scores:[], temp:1, saved:{} };
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function tokenize(s){
+    return String(s || "").trim().split(/\s+/).filter(Boolean).slice(0, MAXTOK);
+  }
+
+  function hexToRgb(h){
+    return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  }
+
+  function tintOf(i){ return TINTS[i % TINTS.length]; }
+
+  function softmax(scores, temp){
+    var t = Math.max(0.05, temp);
+    var z = scores.map(function(s){ return s / t; });
+    var max = Math.max.apply(null, z);
+    var ex = z.map(function(v){ return Math.exp(v - max); });
+    var sum = ex.reduce(function(a,b){ return a + b; }, 0);
+    return { exp:ex, p:ex.map(function(v){ return v / sum; }), sum:sum, z:z };
+  }
+
+  function entropyBits(p){
+    var h = 0;
+    for(var i = 0; i < p.length; i++){
+      if(p[i] > 1e-12) h -= p[i] * Math.log2(p[i]);
+    }
+    return h;
+  }
+
+  // A row counts as "the user's own" once it differs from the flat default.
+  function commitRow(){
+    var flat = state.scores.every(function(s){ return s === state.scores[0]; });
+    if(!flat) state.saved[state.focus] = state.scores.slice();
+  }
+
+  function load(text, focus, preset){
+    var toks = tokenize(text);
+    if(!toks.length) return;
+    state.saved = {};
+    state.tokens = toks;
+    state.focus = Math.min(focus == null ? 0 : focus, toks.length - 1);
+    state.scores = toks.map(function(_, i){
+      return (preset && preset[i] != null) ? preset[i] : 1;
+    });
+    $("sentence").value = toks.join(" ");
+    renderAll();
+  }
+
+  function renderExamples(){
+    var wrap = $("examples");
+    wrap.innerHTML = "";
+    EXAMPLES.forEach(function(ex){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "ex";
+      b.textContent = ex.label;
+      b.addEventListener("click", function(){ load(ex.text, ex.focus, ex.preset); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderTokens(){
+    var wrap = $("tokens");
+    wrap.innerHTML = "";
+    state.tokens.forEach(function(t, i){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "tok";
+      b.setAttribute("aria-pressed", i === state.focus ? "true" : "false");
+      var sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = tintOf(i);
+      var tx = document.createElement("span");
+      tx.textContent = t;
+      b.appendChild(sw);
+      b.appendChild(tx);
+      b.addEventListener("click", function(){
+        if(i === state.focus) return;
+        commitRow();                       // keep the row just finished
+        state.focus = i;
+        state.scores = state.saved[i]
+          ? state.saved[i].slice()         // come back to a row already scored
+          : state.tokens.map(function(){ return 1; });
+        renderAll();
+      });
+      wrap.appendChild(b);
+    });
+    $("tok-note").textContent = "단어 " + state.tokens.length + "개로 나눴습니다. (최대 " + MAXTOK + "개까지 다룹니다)";
+  }
+
+  function renderSliders(){
+    var wrap = $("sliders");
+    wrap.innerHTML = "";
+    var res = softmax(state.scores, state.temp);
+
+    $("score-prompt").innerHTML = "<b>&ldquo;" + escapeHtml(state.tokens[state.focus]) +
+      "&rdquo;</b>의 뜻을 정하려고 합니다. 각 단어를 얼마나 참고하면 좋을까요?";
+
+    state.tokens.forEach(function(t, i){
+      var row = document.createElement("div");
+      row.className = "slider-row";
+
+      var word = document.createElement("div");
+      word.className = "word";
+      var sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = tintOf(i);
+      var nm = document.createElement("span");
+      nm.className = "name";
+      nm.textContent = t;
+      word.appendChild(sw);
+      word.appendChild(nm);
+      if(i === state.focus){
+        var tag = document.createElement("span");
+        tag.className = "self-tag";
+        tag.textContent = "자기 자신";
+        word.appendChild(tag);
+      }
+
+      var pct = document.createElement("div");
+      pct.className = "pct";
+      pct.textContent = Math.round(res.p[i] * 100) + "%";
+
+      var bar = document.createElement("div");
+      bar.className = "minibar";
+      var fill = document.createElement("i");
+      fill.style.width = (res.p[i] * 100).toFixed(1) + "%";
+      fill.style.background = tintOf(i);
+      bar.appendChild(fill);
+
+      var range = document.createElement("input");
+      range.type = "range";
+      range.min = "0";
+      range.max = "5";
+      range.step = "1";
+      range.value = String(state.scores[i]);
+      range.id = "score-" + i;
+      range.setAttribute("aria-label", t + " 참고 점수");
+      range.addEventListener("input", function(){
+        state.scores[i] = Number(range.value);
+        renderOutputs();
+      });
+
+      row.appendChild(word);
+      row.appendChild(pct);
+      row.appendChild(bar);
+      row.appendChild(range);
+      wrap.appendChild(row);
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[c];
+    });
+  }
+
+  function renderOutputs(){
+    var res = softmax(state.scores, state.temp);
+    var p = res.p;
+    var focusWord = state.tokens[state.focus];
+
+    // live numbers on the slider rows
+    var rows = $("sliders").querySelectorAll(".slider-row");
+    for(var i = 0; i < rows.length; i++){
+      rows[i].querySelector(".pct").textContent = Math.round(p[i] * 100) + "%";
+      rows[i].querySelector(".minibar i").style.width = (p[i] * 100).toFixed(1) + "%";
+    }
+
+    // verdict
+    var top = 0;
+    for(var k = 1; k < p.length; k++){ if(p[k] > p[top]) top = k; }
+    var spread = Math.max.apply(null, p) - Math.min.apply(null, p);
+    var verdict;
+    if(spread < 0.02){
+      verdict = "지금은 모든 단어를 똑같이 참고하고 있습니다. 이건 그냥 평균이에요. " +
+                "어텐션의 핵심은 <b>차등을 두는 것</b>입니다. 슬라이더를 움직여 보세요.";
+    } else {
+      verdict = "&ldquo;" + escapeHtml(focusWord) + "&rdquo;의 뜻을 정하는 데 " +
+                "<b>&ldquo;" + escapeHtml(state.tokens[top]) + "&rdquo;</b>의 정보를 " +
+                "<b>" + Math.round(p[top] * 100) + "%</b> 가져왔습니다.";
+    }
+    $("verdict").innerHTML = verdict;
+
+    // colour mix
+    var r = 0, g = 0, b = 0;
+    state.tokens.forEach(function(_, i){
+      var c = hexToRgb(tintOf(i));
+      r += c[0] * p[i]; g += c[1] * p[i]; b += c[2] * p[i];
+    });
+    $("mix-chip").style.background = "rgb(" + Math.round(r) + "," + Math.round(g) + "," + Math.round(b) + ")";
+    $("mix-title").innerHTML = "문맥이 반영된 &ldquo;" + escapeHtml(focusWord) + "&rdquo;";
+    $("mix-vec").innerHTML = "= [ " + r.toFixed(1) + ", " + g.toFixed(1) + ", " + b.toFixed(1) +
+      " ] &nbsp;&larr;&nbsp; " + p.length + "개 벡터의 가중합";
+
+    // concentration / entropy — the weights are a probability distribution
+    var h = entropyBits(p);
+    var hMax = Math.log2(p.length);
+    var conc = hMax > 0 ? (1 - h / hMax) : 1;
+    $("stat-conc").textContent = Math.round(conc * 100) + "%";
+    $("stat-gauge").style.width = (conc * 100).toFixed(1) + "%";
+    $("stat-conc-d").textContent = conc < 0.05
+      ? "거의 그냥 평균입니다"
+      : (conc > 0.5 ? "한 단어에 크게 쏠렸습니다" : "한 곳에 쏠릴수록 100%");
+    $("stat-ent").textContent = h.toFixed(2);
+    $("stat-ent-d").textContent = "최대 " + hMax.toFixed(2) + " 비트";
+    $("stat-eff").textContent = Math.pow(2, h).toFixed(1) + "개";
+
+    // stacked bar
+    var stack = $("stack");
+    stack.innerHTML = "";
+    state.tokens.forEach(function(_, i){
+      var seg = document.createElement("i");
+      seg.style.width = (p[i] * 100).toFixed(2) + "%";
+      seg.style.background = tintOf(i);
+      stack.appendChild(seg);
+    });
+
+    // legend
+    var lg = $("legend");
+    lg.innerHTML = "";
+    state.tokens
+      .map(function(t, i){ return { t:t, i:i, p:p[i] }; })
+      .sort(function(a, c){ return c.p - a.p; })
+      .slice(0, 8)
+      .forEach(function(o){
+        var s = document.createElement("span");
+        var sw = document.createElement("span");
+        sw.className = "swatch";
+        sw.style.background = tintOf(o.i);
+        var tx = document.createElement("span");
+        tx.innerHTML = escapeHtml(o.t) + " <b>" + Math.round(o.p * 100) + "%</b>";
+        s.appendChild(sw);
+        s.appendChild(tx);
+        lg.appendChild(s);
+      });
+
+    // calculation table
+    var tb = $("calc-body");
+    tb.innerHTML = "";
+    state.tokens.forEach(function(t, i){
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + escapeHtml(t) + "</td>" +
+        "<td>" + state.scores[i] + "</td>" +
+        "<td>" + res.z[i].toFixed(2) + "</td>" +
+        "<td>" + res.exp[i].toFixed(3) + "</td>" +
+        "<td>" + (p[i] * 100).toFixed(1) + "%</td>";
+      tb.appendChild(tr);
+    });
+
+    renderMatrix();
+    renderCode();
+  }
+
+  function renderMatrix(){
+    var n = state.tokens.length;
+    var live = softmax(state.scores, state.temp).p;
+    var rows = {};
+    var doneCount = 0;
+    for(var i = 0; i < n; i++){
+      if(i === state.focus){ rows[i] = live; doneCount++; }
+      else if(state.saved[i]){ rows[i] = softmax(state.saved[i], state.temp).p; doneCount++; }
+    }
+
+    var html = '<table class="mtx"><thead><tr><th scope="col">보는 단어 \\ 참고 대상</th>';
+    for(var c = 0; c < n; c++) html += '<th scope="col">' + escapeHtml(state.tokens[c]) + "</th>";
+    html += "</tr></thead><tbody>";
+
+    for(var r = 0; r < n; r++){
+      var filled = !!rows[r];
+      html += '<tr' + (filled ? ' class="done"' : "") + '><th scope="row" class="rh">' +
+              escapeHtml(state.tokens[r]) + (r === state.focus ? " ◀" : "") + "</th>";
+      for(var c2 = 0; c2 < n; c2++){
+        if(filled){
+          var v = rows[r][c2];
+          // tint strength carries the weight so the matrix reads at a glance
+          html += '<td style="background:rgba(233,29,42,' + (v * 0.75).toFixed(3) + ')">' +
+                  Math.round(v * 100) + "</td>";
+        } else {
+          html += '<td class="empty">·</td>';
+        }
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table>";
+    $("matrix").innerHTML = html;
+
+    $("mtx-note").innerHTML = doneCount >= n
+      ? "표가 다 찼습니다. <b>이 표 한 장이 셀프 어텐션 한 층</b>입니다. 진짜 모델은 이 표를 층마다, 그리고 한 층 안에서도 여러 개(멀티헤드) 동시에 만듭니다."
+      : "채운 줄 <b>" + doneCount + "</b> / " + n + " — 위 2번에서 다른 단어를 눌러 나머지 줄도 채워 보세요. 숫자는 %입니다.";
+  }
+
+  function renderCode(){
+    var toks = state.tokens;
+    var q = escapeForPy(toks[state.focus]);
+    var lines = [
+      "import numpy as np",
+      "",
+      "words  = [" + toks.map(function(t){ return '"' + escapeForPy(t) + '"'; }).join(", ") + "]",
+      '# 기준 단어 "' + q + '" — 각 단어에 매긴 점수',
+      "scores = np.array([" + state.scores.join(", ") + "], dtype=float)",
+      "temp   = " + state.temp.toFixed(1),
+      "",
+      "z = scores / temp",
+      "p = np.exp(z - z.max())",
+      "p = p / p.sum()                      # 소프트맥스",
+      "",
+      "for w, prob in zip(words, p):",
+      '    print(f"{w:<10} {prob:6.1%}")',
+      "",
+      '# 색(R,G,B)을 단어 벡터로 치면, 가중합이 곧 문맥이 반영된 "' + q + '"',
+      "V = np.array([",
+      "    " + toks.map(function(_, i){ return "[" + hexToRgb(tintOf(i)).join(", ") + "]"; }).join(",\n    "),
+      "], dtype=float)",
+      "print(p @ V)                          # 확률만큼 곱해서 더한다",
+      "",
+      "# 확인: 이 분포가 얼마나 한 곳에 쏠렸는가",
+      'print("엔트로피", -(p * np.log2(p + 1e-12)).sum())'
+    ];
+    $("code-out").textContent = lines.join("\n");
+  }
+
+  function escapeForPy(s){
+    return String(s).replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  }
+
+  // Random vectors, real softmax: shows why the formula divides by sqrt(d).
+  function renderScaleDemo(){
+    // mulberry32: stays exact in 32-bit, unlike a plain LCG in float64
+    var seed = 0x9e3779b9;
+    function rnd(){
+      seed = (seed + 0x6d2b79f5) | 0;
+      var t = seed;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    function gauss(){ return Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd()); }
+
+    var dims = [4, 64, 512];
+    var TOKENS = 8, TRIALS = 200;
+    var html = "";
+    dims.forEach(function(d){
+      var rawTop = 0, sclTop = 0;
+      for(var t = 0; t < TRIALS; t++){
+        var raw = [];
+        for(var i = 0; i < TOKENS; i++){
+          var dot = 0;
+          for(var k = 0; k < d; k++) dot += gauss() * gauss();
+          raw.push(dot);
+        }
+        rawTop += topProb(raw, 1);
+        sclTop += topProb(raw, Math.sqrt(d));
+      }
+      html += "<tr><td>" + d + "</td><td>" + Math.round(rawTop / TRIALS * 100) + "%</td><td>" +
+              Math.round(sclTop / TRIALS * 100) + "%</td></tr>";
+    });
+    $("scale-body").innerHTML = html;
+
+    function topProb(scores, div){
+      var z = scores.map(function(s){ return s / div; });
+      var m = Math.max.apply(null, z);
+      var ex = z.map(function(v){ return Math.exp(v - m); });
+      var sum = ex.reduce(function(a, b){ return a + b; }, 0);
+      return Math.max.apply(null, ex) / sum;
+    }
+  }
+
+  function renderAll(){
+    renderTokens();
+    renderSliders();
+    renderOutputs();
+  }
+
+  // ---- panel 2 data ----
+  var PAIR = [
+    {
+      before:"I arrived at the ", focusWord:"bank", after:" after crossing the ", last:"road",
+      weights:[["road",0.34],["crossing",0.16],["bank (자기 자신)",0.14],["arrived",0.12],["at",0.08],["after",0.07],["the",0.05],["I",0.04]]
+    },
+    {
+      before:"I arrived at the ", focusWord:"bank", after:" after crossing the ", last:"river",
+      weights:[["river",0.41],["crossing",0.17],["bank (자기 자신)",0.13],["arrived",0.10],["at",0.07],["after",0.06],["the",0.03],["I",0.03]]
+    }
+  ];
+
+  function renderPair(){
+    var wrap = $("pair");
+    wrap.innerHTML = "";
+    PAIR.forEach(function(d){
+      var box = document.createElement("div");
+
+      var s = document.createElement("p");
+      s.className = "sent";
+      s.innerHTML = escapeHtml(d.before) + "<em>" + escapeHtml(d.focusWord) + "</em>" +
+                    escapeHtml(d.after) + "<mark>" + escapeHtml(d.last) + "</mark>.";
+      box.appendChild(s);
+
+      var list = document.createElement("div");
+      list.className = "attn-list";
+      var max = d.weights[0][1];
+      d.weights.forEach(function(w, idx){
+        var row = document.createElement("div");
+        row.className = "attn";
+        var name = document.createElement("div");
+        name.className = "w";
+        name.textContent = w[0];
+        var track = document.createElement("div");
+        track.className = "track";
+        var fill = document.createElement("i");
+        fill.style.width = ((w[1] / max) * 100).toFixed(1) + "%";
+        if(idx === 0) fill.className = "hot";
+        track.appendChild(fill);
+        var val = document.createElement("div");
+        val.className = "v";
+        val.textContent = Math.round(w[1] * 100) + "%";
+        row.appendChild(name);
+        row.appendChild(track);
+        row.appendChild(val);
+        list.appendChild(row);
+      });
+      box.appendChild(list);
+      wrap.appendChild(box);
+    });
+  }
+
+  // ---- wiring ----
+  $("apply").addEventListener("click", function(){
+    load($("sentence").value, 0, null);
+  });
+  $("sentence").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); load($("sentence").value, 0, null); }
+  });
+  $("temp").addEventListener("input", function(){
+    state.temp = Number($("temp").value);
+    $("temp-val").textContent = state.temp.toFixed(1);
+    renderOutputs();
+  });
+
+  var tabs = [
+    { btn:$("tab-play"), panel:$("panel-play") },
+    { btn:$("tab-real"), panel:$("panel-real") }
+  ];
+  tabs.forEach(function(t){
+    t.btn.addEventListener("click", function(){
+      tabs.forEach(function(o){
+        var on = (o === t);
+        o.btn.setAttribute("aria-selected", on ? "true" : "false");
+        o.panel.hidden = !on;
+      });
+    });
+  });
+
+  renderExamples();
+  $("copy-code").addEventListener("click", function(){
+    var btn = this, txt = $("code-out").textContent;
+    function done(ok){
+      btn.textContent = ok ? "복사했습니다" : "직접 선택해 주세요";
+      setTimeout(function(){ btn.textContent = "코드 복사"; }, 1800);
+    }
+    // clipboard API needs https; fall back to selecting the block
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ done(true); }, function(){ selectCode(); done(false); });
+    } else {
+      selectCode();
+      done(false);
+    }
+  });
+
+  function selectCode(){
+    var sel = window.getSelection();
+    if(!sel) return;
+    var range = document.createRange();
+    range.selectNodeContents($("code-out"));
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  renderPair();
+  renderScaleDemo();
+  load(EXAMPLES[0].text, EXAMPLES[0].focus, EXAMPLES[0].preset);
+})();
+</script>
+
+</body>
+</html>
